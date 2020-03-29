@@ -7,7 +7,7 @@ import math
 import numpy as np
 import evaluate4 as e2
 import activationFunction as af
-import walk as w
+# import walk as w
 import GenerateNewSample as gns
 import FCSA as fcsa
 from random import randint
