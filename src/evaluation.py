@@ -9,15 +9,21 @@ class EvaluateModel():
         self.nn1 = nn1
         self.nn2 = nn2
         self.entities = config['entities']
+        self.relations = config['relations']
         self.train = config['train']
         self.test = config['test']
         self.validation = config['validation']
+    def updateParameter(self, nn0,nn1,nn2):
+        self.nn0 = nn0
+        self.nn1 = nn1
+        self.nn2 = nn2    
 
     def calculateRank(self, triple):  
         selectedEntities = tf.cast(tf.gather(self.entities, 0, axis=1), dtype=tf.int64)
         _head_index = tf.gather(triple,0)
         _tail_index = tf.gather(triple,1)
         _relation_index = tf.gather(triple,2)  
+
         indexes = tf.where( tf.math.logical_and( (tf.gather(self.train, 1, axis=1) == _tail_index) , (tf.gather(self.train, 2, axis=1) == _relation_index)))
         indexes = tf.reshape(indexes, (indexes.shape[0] ))
         existEntites = tf.gather(tf.gather(self.train, indexes), 0, axis=1)
@@ -150,9 +156,12 @@ class EvaluateModel():
         _set = self.validation
         if evalSet == 'test':
             _set = self.test
-        for tIndex in range(0 ,_set.shape[0]):
+        # for tIndex in range(0 ,10):
+        for tIndex in range(0 ,_set.shape[0]):            
             triple = tf.gather(_set,tIndex)
             tensor.append(self.calculateRank(triple))
-        print(self.mrr(tensor))
-        print(self.mr(tensor))
-        print(self.HitAtK(tensor))
+        print("MRR : %10f" %self.mrr(tensor))
+        print("MR : %10f" %self.mr(tensor))
+        print("Hit @ 10 : %10f" %self.HitAtK(tensor))
+        print("Hit @ 3 : %10f" %self.HitAtK(tensor, k=3))
+        print("Hit @ 1 : %10f" %self.HitAtK(tensor, k=1))
