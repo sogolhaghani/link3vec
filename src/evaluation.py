@@ -156,8 +156,9 @@ class EvaluateModel():
         _set = self.validation
         if evalSet == 'test':
             _set = self.test
-        # for tIndex in range(0 ,10):
-        for tIndex in range(0 ,_set.shape[0]):            
+        _settrain = tf.random.shuffle(_set, seed=None, name=None)            
+        for tIndex in range(0 ,250):
+        # for tIndex in range(0 ,_set.shape[0]):            
             triple = tf.gather(_set,tIndex)
             tensor.append(self.calculateRank(triple))
         print("MRR : %10f" %self.mrr(tensor))

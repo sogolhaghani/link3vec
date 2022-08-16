@@ -18,9 +18,9 @@ def _config_WN18():
     config['_save_embedings'] = False
     config['read_Last_state'] = False
     config['iteration'] = tf.constant(2000)
-    config['dim'] = tf.constant(100)
-    config['kns'] = tf.constant(1)
-    config['kns_r'] = tf.constant(1)
+    config['dim'] = tf.constant(150)
+    config['kns'] = tf.constant(15)
+    config['kns_r'] = tf.constant(5)
     config['alpha'] = tf.Variable(0.07, dtype = tf.float64)
     config['beta'] = tf.Variable(0.007, dtype = tf.float64)
 
@@ -37,12 +37,12 @@ def _config_WN18RR():
     config['test'] = tf.convert_to_tensor( np.load(os.path.join(config['path'], "test.npy") ).astype(dtype=np.int64), dtype=tf.int64)
     config['relations'] = tf.convert_to_tensor( np.load(os.path.join(config['path'], "relations.npy") ).astype(dtype=np.float64), dtype=tf.float64)
     config['entities'] = tf.convert_to_tensor( np.load(os.path.join(config['path'], "entities.npy") ).astype(dtype=np.float64), dtype=tf.float64)
-    config['_save_embedings'] = False
-    config['read_Last_state'] = False
+    config['_save_embedings'] = True
+    config['read_Last_state'] = True
     config['iteration'] = tf.constant(2000)
-    config['dim'] = tf.constant(100)
-    config['kns'] = tf.constant(1)
-    config['kns_r'] = tf.constant(1)
+    config['dim'] = tf.constant(150)
+    config['kns'] = tf.constant(10)
+    config['kns_r'] = tf.constant(5)
     config['alpha'] = tf.Variable(0.07, dtype = tf.float64)
     config['beta'] = tf.Variable(0.007, dtype = tf.float64)
 
@@ -109,13 +109,14 @@ def train(config):
             triple = tf.gather(train, tIndex)
             tensor.append((model._score_and_update_tail(triple, tIndex) + model._score_and_update_rel(triple, tIndex) + model._score_and_update_head(triple, tIndex) ) / 3 )        
         print(sum(tensor) / _tSize)
-        if x > 0 and x % 5 == 0:
-            model._save(x)
+        model._save(x)
+        if x > 15 and x % 5 == 0:
+            
             t.updateParameter(nn0=model.nn0, nn1=model.nn1, nn2=model.nn2)     
             t.eval()  
 
 def run():
-    train(_config_WN18())            
+    train(_config_WN18RR())            
 
 if __name__ == "__main__":
     run()    

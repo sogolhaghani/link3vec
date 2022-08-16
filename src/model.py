@@ -4,7 +4,7 @@ import tensorflow as tf
 
 class Link3Vec():
     def __init__(self,config):
-
+        self.path = config['path']
         self.dim = config['dim']
         self.kns = config['kns']
         self.kns_r = config['kns_r']
@@ -24,7 +24,7 @@ class Link3Vec():
             self.nn0 = tf.convert_to_tensor( np.load(os.path.join(config['path'], "nn0.npy") ).astype(dtype=np.float64), dtype=tf.float64)
             self.nn1 = tf.convert_to_tensor( np.load(os.path.join(config['path'], "nn1.npy") ).astype(dtype=np.float64), dtype=tf.float64)
             self.nn2 = tf.convert_to_tensor( np.load(os.path.join(config['path'], "nn2.npy") ).astype(dtype=np.float64), dtype=tf.float64)
-            self.startIndex= np.load(os.path.join(config['path'], "x.npy"))
+            self.startIndex= np.load(os.path.join(config['path'], "x.npy")) + 1
 
     def _score_and_update_tail(self, triple, tIndex):
         paddings = tf.constant([[0, 1,], [0, 0]])
