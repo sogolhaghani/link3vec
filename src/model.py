@@ -11,6 +11,9 @@ class Link3Vec():
         self.alpha = config['alpha']
         self.beta = config['beta']
 
+        # self.entities = config['entities']
+        # self.relations = config['relations']
+
         z = tf.constant(5, dtype = tf.float64)
         self.nn1 = tf.random.uniform( shape=(config['entities'].shape[0], self.dim),maxval=tf.math.truediv(z , tf.cast(self.dim,tf.float64),'maxval'), dtype=tf.dtypes.float64, seed=1, name='nn1')
         self.nn0 =tf.random.uniform(shape=(config['entities'].shape[0], self.dim), maxval=tf.math.truediv(z , tf.cast(self.dim,tf.float64),'maxval'), dtype=tf.dtypes.float64, seed=1, name='nn0')
@@ -32,14 +35,16 @@ class Link3Vec():
         _relation_index = tf.gather(triple,2)
         _vHead = tf.gather(self.nn0,_head_index)
         _vRel = tf.gather(self.nn2,_relation_index)
-
         samples = [tf.slice(self.nSam_ent,begin=[tf.math.multiply(tIndex, self.kns)],size=[self.kns])]
+        # samples = [tf.slice(tf.random.shuffle(self.nSam_ent),begin=[tf.math.multiply(tIndex, self.kns)],size=[self.kns])]
+        # samples = [tf.gather(tf.random.shuffle(self.entities)[:self.kns],0, axis=1)]
+
         samples = tf.pad(samples, paddings, constant_values=0)
-        samples =  tf.cast(samples, tf.int64)         
+        samples =  tf.cast(samples, tf.int64)      
+  
         samples = tf.transpose(tf.concat([samples, [[tf.gather(triple,1)],[1]]], 1))
         indices = tf.gather(samples, 0, axis=1)
         _nn1_samples = tf.gather(self.nn1, indices)
-
         _sigmoid =tf.math.sigmoid(tf.tensordot( _nn1_samples , tf.transpose(tf.math.add(_vHead , _vRel)) , axes=1))
         cost = tf.math.subtract(tf.cast(tf.gather(samples, 1, axis=1), tf.float64) , _sigmoid)
         g = tf.math.multiply(self.alpha , cost)
@@ -70,6 +75,7 @@ class Link3Vec():
         _vRel = tf.gather(self.nn2,_relation_index)
 
         samples = [tf.slice(self.nSam_ent,begin=[tf.math.multiply(tIndex, self.kns)],size=[self.kns])]
+        # samples = [tf.gather(tf.random.shuffle(self.entities)[:self.kns],0, axis=1)]
         samples = tf.pad(samples, paddings, constant_values=0)
         samples =  tf.cast(samples, tf.int64)         
         samples = tf.transpose(tf.concat([samples, [[tf.gather(triple,0)],[1]]], 1))
@@ -108,6 +114,7 @@ class Link3Vec():
         _vTail = tf.gather(self.nn1,_tail_index)
 
         samples = [tf.slice(self.nSam_rel,begin=[tf.math.multiply(tIndex, self.kns_r)],size=[self.kns_r])]
+        # samples = [tf.gather(tf.random.shuffle(self.relations)[:self.kns_r],0, axis=1)]
         samples = tf.pad(samples, paddings, constant_values=0)
         samples =  tf.cast(samples, tf.int64)         
         samples = tf.transpose(tf.concat([samples, [[_relation_index],[1]]], 1))

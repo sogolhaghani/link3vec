@@ -70,6 +70,7 @@ class EvaluateModel():
         p = tf.math.subtract(1 , tf.concat([p0,p1,p2,], 0))
         ranks = rankdata(p.numpy(), method='min')
         rankH = ranks[-1]
+        pH = p.numpy()[-1]
         p0 = None
         p1 = None
         p2 = None
@@ -121,17 +122,20 @@ class EvaluateModel():
         p = tf.math.subtract(1 , tf.concat([p0,p1,p2,], 0))
         ranks = rankdata(p.numpy(), method='min')    
         rankT = ranks[-1]
+        pT = p.numpy()[-1]
         p = None
         if tf.math.greater(rankH , rankT):
-            return rankT
+            return rankT , pT
         else:
-            return rankH   
+            return rankH , pH  
 
     def calcProbability(self,s, _relation_index):               
-        return (tf.math.sigmoid(tf.tensordot(  tf.gather(self.nn0,tf.gather(s,1, axis=1),0),tf.transpose(  tf.gather( self.nn1,  tf.gather( s,0, axis=1)) + tf.gather(self.nn2,_relation_index) ),axes=1 )) +
-        tf.math.sigmoid(tf.tensordot(  tf.gather(self.nn1,tf.gather(s,0, axis=1),0),tf.transpose(  tf.gather( self.nn0,  tf.gather( s,1, axis=1)) + tf.gather(self.nn2,_relation_index) ),axes=1 )) +
-        tf.math.sigmoid(tf.tensordot(  tf.gather(self.nn2,_relation_index),tf.transpose(  tf.gather( self.nn1,  tf.gather( s,0, axis=1)) + tf.gather(self.nn0,tf.gather(s,1, axis=1),0) ),axes=1 )) 
-        )/3
+        # return (
+        #     tf.math.sigmoid(tf.tensordot(  tf.gather(self.nn0,tf.gather(s,0, axis=1),0),tf.transpose(  tf.gather( self.nn1,  tf.gather( s,1, axis=1)) + tf.gather(self.nn2,_relation_index) ),axes=1 )) 
+        #     + tf.math.sigmoid(tf.tensordot(  tf.gather(self.nn1,tf.gather(s,1, axis=1),0),tf.transpose(  tf.gather( self.nn0,  tf.gather( s,0, axis=1)) + tf.gather(self.nn2,_relation_index) ),axes=1 )) 
+        #     + tf.math.sigmoid(tf.tensordot(  tf.gather(self.nn2,_relation_index),tf.transpose(  tf.gather( self.nn1,  tf.gather( s,1, axis=1)) + tf.gather(self.nn0,tf.gather(s,0, axis=1),0) ),axes=1 )) 
+        # )/3
+        return tf.math.sigmoid(tf.tensordot(  tf.gather(self.nn1,tf.gather(s,1, axis=1),0),tf.transpose(  tf.gather( self.nn0,  tf.gather( s,0, axis=1)) + tf.gather(self.nn2,_relation_index) ),axes=1 )) 
 
     def mrr(self, ranks):
         inverse = []
@@ -153,16 +157,21 @@ class EvaluateModel():
 
     def eval(self, evalSet='validation'):
         tensor = []
+        probs = []
         _set = self.validation
         if evalSet == 'test':
             _set = self.test
-        _settrain = tf.random.shuffle(_set, seed=None, name=None)            
-        for tIndex in range(0 ,250):
+        # _set = tf.random.shuffle(_set, seed=None, name=None)            
+        for tIndex in range(0 ,100):
         # for tIndex in range(0 ,_set.shape[0]):            
             triple = tf.gather(_set,tIndex)
-            tensor.append(self.calculateRank(triple))
+            r, p = self.calculateRank(triple)
+            tensor.append(r)
+            probs.append(p)
         print("MRR : %10f" %self.mrr(tensor))
         print("MR : %10f" %self.mr(tensor))
         print("Hit @ 10 : %10f" %self.HitAtK(tensor))
         print("Hit @ 3 : %10f" %self.HitAtK(tensor, k=3))
         print("Hit @ 1 : %10f" %self.HitAtK(tensor, k=1))
+        # print(probs)
+        # print(tensor)
