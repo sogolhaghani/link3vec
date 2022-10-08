@@ -32,15 +32,15 @@ def link2vec1(param):
             neu1e = np.zeros(param['dim'])
             negative_samples = [(target, 0) for target in param['table'].sample(param['kns'])]
             classifiers = [(head, 1)] + negative_samples
-            for target, label in classifiers:
+            for head, label in classifiers:
                 if label == 0:
                     relation_index = randint(0, param['data'].sizeOfRelations-1)
-                z = np.dot(param['nn0'][tail], (param['nn1'][target] + param['nn2'][relation_index]))
+                z = np.dot(param['nn0'][tail], (param['nn1'][head] + param['nn2'][relation_index]))
                 p = af.sigmoid(z)
                 g = param['alpha'] * (label - p)
                 g1 = param['beta'] * (label - p)
-                neu1e += (g * param['nn1'][target] + g1 * param['nn2'][relation_index])  # Error to backpropagate to nn0
-                param['nn1'][target] += g * param['nn0'][tail]  # Update nn1
+                neu1e += (g * param['nn1'][head] + g1 * param['nn2'][relation_index])  # Error to backpropagate to nn0
+                param['nn1'][head] += g * param['nn0'][tail]  # Update nn1
                 param['nn2'][relation_index] += g * param['nn0'][tail]
             param['nn0'][tail] +=neu1e  
 

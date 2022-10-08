@@ -66,6 +66,45 @@ class Link3Vec():
         self.nn0 = tf.tensor_scatter_nd_update(self.nn0,tf.expand_dims([indices], 1), tf.reshape(_nn0_sample,(1, _nn0_sample.shape[0])))
         return tf.gather(_sigmoid,self.kns)
 
+    def _score_and_update_tail_2(self, triple, tIndex):
+        paddings = tf.constant([[0, 1,], [0, 0]])
+        _head_index = tf.gather(triple,0)
+        _relation_index = tf.gather(triple,2)
+        _vHead = tf.gather(self.nn0,_head_index)
+        _vRel = tf.gather(self.nn2,_relation_index)
+        samples = [tf.slice(self.nSam_ent,begin=[tf.math.multiply(tIndex, self.kns)],size=[self.kns])]
+        # samples = [tf.slice(tf.random.shuffle(self.nSam_ent),begin=[tf.math.multiply(tIndex, self.kns)],size=[self.kns])]
+        # samples = [tf.gather(tf.random.shuffle(self.entities)[:self.kns],0, axis=1)]
+
+        samples = tf.pad(samples, paddings, constant_values=0)
+        samples =  tf.cast(samples, tf.int64)      
+
+        samples = tf.transpose(tf.concat([samples, [[tf.gather(triple,1)],[1]]], 1))
+        indices = tf.gather(samples, 0, axis=1)
+        _nn1_samples = tf.gather(self.nn1, indices)
+
+        _sigmoid =tf.math.sigmoid(tf.tensordot(  tf.reshape( _vHead,(1,self.nn0.shape[1])), tf.transpose(tf.math.add(_nn1_samples , _vRel)) , axes=1))
+        cost = tf.reshape(tf.math.subtract(tf.cast(tf.gather(samples, 1, axis=1), tf.float64) , _sigmoid),(samples.shape[0],1))
+        g = tf.math.multiply(self.alpha , cost)
+        g1 = tf.math.multiply(self.beta , cost)
+    
+        # error second layer nn2
+        err_nn2 = tf.math.multiply( _nn1_samples, tf.reshape(g1, (g1.shape[0], 1)))
+        _nn2_sample = tf.math.add(tf.math.reduce_sum(err_nn2, axis=0, keepdims=False), _vRel)
+        indices = tf.constant(_relation_index)
+        self.nn2 = tf.tensor_scatter_nd_update(self.nn2,tf.expand_dims([indices], 1), tf.reshape(_nn2_sample,(1, _nn2_sample.shape[0])))
+
+        err_nn0 = tf.math.multiply( _nn1_samples, tf.reshape(g, (g.shape[0], 1)))
+        _nn0_sample = tf.math.add(tf.math.reduce_sum(err_nn0, axis=0, keepdims=False),_vHead)
+        indices = tf.constant(_head_index)
+        self.nn0 = tf.tensor_scatter_nd_update(self.nn0,tf.expand_dims([indices], 1), tf.reshape(_nn0_sample,(1, _nn0_sample.shape[0])))
+
+        # error in first layer
+        _nn1_samples_err = tf.math.add(tf.math.add(tf.math.multiply(_vHead  , g), tf.math.multiply(_vRel,g1)) , _nn1_samples)
+        # print(_nn1_samples_err)
+        self.nn1 = tf.tensor_scatter_nd_update(self.nn1,  tf.expand_dims(tf.gather(samples, 0, axis=1), 1)    ,_nn1_samples_err)
+        return tf.gather(_sigmoid,self.kns, axis=1)
+
     def _score_and_update_head(self, triple, tIndex):      
         paddings = tf.constant([[0, 1,], [0, 0]])  
         _tail_index = tf.gather(triple,1)
