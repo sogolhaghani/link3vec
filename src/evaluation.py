@@ -13,6 +13,10 @@ class EvaluateModel():
         self.train = config['train']
         self.test = config['test']
         self.validation = config['validation']
+        self.hW = config['hW']
+        self.rW = config['rW']
+        self.tW = config['tW']
+
     def updateParameter(self, nn0,nn1,nn2):
         self.nn0 = nn0
         self.nn1 = nn1
@@ -130,12 +134,9 @@ class EvaluateModel():
             return rankH , pH  
 
     def calcProbability(self,s, _relation_index):               
-        # return (
-        #     tf.math.sigmoid(tf.tensordot(  tf.gather(self.nn0,tf.gather(s,0, axis=1),0),tf.transpose(  tf.gather( self.nn1,  tf.gather( s,1, axis=1)) + tf.gather(self.nn2,_relation_index) ),axes=1 )) 
-        #     + tf.math.sigmoid(tf.tensordot(  tf.gather(self.nn1,tf.gather(s,1, axis=1),0),tf.transpose(  tf.gather( self.nn0,  tf.gather( s,0, axis=1)) + tf.gather(self.nn2,_relation_index) ),axes=1 )) 
-        #     + tf.math.sigmoid(tf.tensordot(  tf.gather(self.nn2,_relation_index),tf.transpose(  tf.gather( self.nn1,  tf.gather( s,1, axis=1)) + tf.gather(self.nn0,tf.gather(s,0, axis=1),0) ),axes=1 )) 
-        # )/3
-        return tf.math.sigmoid(tf.tensordot(  tf.gather(self.nn1,tf.gather(s,1, axis=1),0),tf.transpose(  tf.gather( self.nn0,  tf.gather( s,0, axis=1)) + tf.gather(self.nn2,_relation_index) ),axes=1 )) 
+        return tf.math.multiply(self.hW,tf.math.sigmoid(tf.tensordot(  tf.gather(self.nn0,tf.gather(s,0, axis=1),0),tf.transpose(  tf.gather( self.nn1,  tf.gather( s,1, axis=1)) + tf.gather(self.nn2,_relation_index) ),axes=1 )) ) + tf.math.multiply(self.tW,tf.math.sigmoid(tf.tensordot(  tf.gather(self.nn1,tf.gather(s,1, axis=1),0),tf.transpose(  tf.gather( self.nn0,  tf.gather( s,0, axis=1)) + tf.gather(self.nn2,_relation_index) ),axes=1 )) ) + tf.math.multiply(self.rW,tf.math.sigmoid(tf.tensordot(  tf.gather(self.nn2,_relation_index),tf.transpose(  tf.gather( self.nn1,  tf.gather( s,1, axis=1)) + tf.gather(self.nn0,tf.gather(s,0, axis=1),0) ),axes=1 )) )
+        
+        # return tf.math.sigmoid(tf.tensordot(  tf.gather(self.nn1,tf.gather(s,1, axis=1),0),tf.transpose(  tf.gather( self.nn0,  tf.gather( s,0, axis=1)) + tf.gather(self.nn2,_relation_index) ),axes=1 )) 
 
     def mrr(self, ranks):
         inverse = []
