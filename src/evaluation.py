@@ -163,7 +163,7 @@ class EvaluateModel():
         if evalSet == 'test':
             _set = self.test
         # _set = tf.random.shuffle(_set, seed=None, name=None)            
-        for tIndex in range(0 ,100):
+        for tIndex in range(0 ,500):
         # for tIndex in range(0 ,_set.shape[0]):            
             triple = tf.gather(_set,tIndex)
             r, p = self.calculateRank(triple)
